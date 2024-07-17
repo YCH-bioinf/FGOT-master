@@ -33,7 +33,6 @@ def calculate_cell_similarity_byMNN(X1, X2, cell_names1, cell_names2, scale=1, k
     if scale == 1:
         scaler = StandardScaler()
         X1, X2 = scaler.fit_transform(X1), scaler.fit_transform(X2)
-    #if cell_names1 == cell_names2:
     cell_names2 = [str+"-1" for str in cell_names2]
     
     match = mnn(X1, X2, cell_names1, cell_names2, knn=knn, save_on_disk = False, approx = False)

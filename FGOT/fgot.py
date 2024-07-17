@@ -109,10 +109,10 @@ def fgot_sparse_4dim(S:pd.DataFrame, D:pd.DataFrame, A : pd.DataFrame, M: np.nda
                     rho_mu = rho
                     rho_nu = rho
                 
-                if fastMinibatch==False: # 计算修正后的M_batch
+                if fastMinibatch==False:
                     Snn1_batch = Snn1[cells1_id,:][:,anchors1_id]
                     Snn2_batch = Snn2[cells2_id,:][:,anchors2_id]
-                    for i in range(len(cells1_id)): # 使用循环的方式，节省内存，但是速度很慢
+                    for i in range(len(cells1_id)):
                         for j in range(len(cells2_id)):
                             M_batch.iloc[i,j] = M_batch.iloc[i,j] + lam * np.sum(np.multiply(compute_D_kl(Snn1_batch, Snn2_batch, i, j),P_anchor))
                 
@@ -125,9 +125,9 @@ def fgot_sparse_4dim(S:pd.DataFrame, D:pd.DataFrame, A : pd.DataFrame, M: np.nda
                 for key in P_tmp.keys():
                     sparse_mtx = P_tmp.get(key)
                     P_tmp[key] = sparse.coo_matrix((sparse_mtx.data, (cells1_id[sparse_mtx.row], cells2_id[sparse_mtx.col])), shape=(n1,n2))
-                    if not (key in P_cot.keys()): # 第一次，添加
+                    if not (key in P_cot.keys()):
                         P_cot[key]= P_tmp[key]
-                    else: # 拼接
+                    else:
                         P_cot[key].data = np.concatenate((P_cot[key].data,P_tmp[key].data))
                         P_cot[key].row  = np.concatenate((P_cot[key].row,P_tmp[key].row))
                         P_cot[key].col  = np.concatenate((P_cot[key].col,P_tmp[key].col))
@@ -155,10 +155,10 @@ def fgot_sparse_4dim(S:pd.DataFrame, D:pd.DataFrame, A : pd.DataFrame, M: np.nda
                         rho_mu = rho
                         rho_nu = rho
                     
-                    if fastMinibatch==False: # 计算修正后的M_batch
+                    if fastMinibatch==False:
                         Snn1_batch = Snn1[cells1_id,:][:,anchors1_id]
                         Snn2_batch = Snn2[cells2_id,:][:,anchors2_id]
-                        for i in range(len(cells1_id)): # 使用循环的方式，节省内存，但是速度很慢
+                        for i in range(len(cells1_id)):
                             for j in range(len(cells2_id)):
                                 M_batch.iloc[i,j] = M_batch.iloc[i,j] + lam * np.sum(np.multiply(compute_D_kl(Snn1_batch, Snn2_batch, i, j),P_anchor))
                     
@@ -171,9 +171,9 @@ def fgot_sparse_4dim(S:pd.DataFrame, D:pd.DataFrame, A : pd.DataFrame, M: np.nda
                     for key in P_tmp.keys():
                         sparse_mtx = P_tmp.get(key)
                         P_tmp[key] = sparse.coo_matrix((sparse_mtx.data, (cells1_id[sparse_mtx.row], cells2_id[sparse_mtx.col])), shape=(n1,n2))
-                        if not (key in P_cot.keys()): # 第一次，添加
+                        if not (key in P_cot.keys()):
                             P_cot[key]= P_tmp[key]
-                        else: # 拼接
+                        else:
                             P_cot[key].data = np.concatenate((P_cot[key].data,P_tmp[key].data))
                             P_cot[key].row  = np.concatenate((P_cot[key].row,P_tmp[key].row))
                             P_cot[key].col  = np.concatenate((P_cot[key].col,P_tmp[key].col))
@@ -208,7 +208,7 @@ def sample_from_cluster_old(cell_cluster:pd.DataFrame,batchsize: int):
         cell_cluster:pd.DataFrame
             cell_cluster['cluster']: numpy.ndarray
     '''
-    unique_clusters = cell_cluster['cluster'].unique() # numpy.ndarray
+    unique_clusters = cell_cluster['cluster'].unique()
     cluster_cell_index = {} # 
     tmp_index = {}
     for cluster in unique_clusters:
@@ -292,9 +292,8 @@ def cross_refine(sample_id, pred, distance_mat, shape="hexagon"):
     refined_pred=[]
     pred1 = pred[:len(sample_id)]
     pred2 = pred[len(sample_id):]
-    pred=pd.DataFrame({"pred_modal1": pred1,"pred_modal2":pred2}, index=sample_id) #pred:预测属于的聚类
-    #return pred ## 可以check一下两个模态下的聚类是否相同
-    distance_df=pd.DataFrame(distance_mat, index=sample_id, columns=sample_id) # 一个矩阵，每个元素是两个点之间的距离
+    pred=pd.DataFrame({"pred_modal1": pred1,"pred_modal2":pred2}, index=sample_id)
+    distance_df=pd.DataFrame(distance_mat, index=sample_id, columns=sample_id)
     if shape=="hexagon":
         num_nbs=6
     elif shape=="square":
@@ -324,7 +323,7 @@ def refine(sample_id, pred, distance_mat, shape="hexagon"):
         For paired data with spatial information only.
     '''
     refined_pred=[]
-    pred=pd.DataFrame({"pred": pred}, index=sample_id) #pred:预测属于的聚类
+    pred=pd.DataFrame({"pred": pred}, index=sample_id)
     distance_df=pd.DataFrame(distance_mat, index=sample_id, columns=sample_id) # 一个矩阵，每个元素是两个点之间的距离
     if shape=="hexagon":
         num_nbs=6
