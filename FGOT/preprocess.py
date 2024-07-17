@@ -44,6 +44,7 @@ def calculate_cell_similarity_byMNN(X1, X2, cell_names1, cell_names2, scale=1, k
     adj = nx.adjacency_matrix(G)
     n1 = len(cell_names1)
     mnn_mtx = adj.todense()[:n1,n1:]
+    mnn_mtx = pd.DataFrame(mnn_mtx, index = cell_names1, columns=cell_names2)
     return mnn_mtx
     
 def calculate_cell_similarity_bySpatial(spatial, X, cell_names1, cell_names2, n_neighbors=20, ratio=0.75):
@@ -66,6 +67,7 @@ def calculate_cell_similarity_byImage(image_features:np.array, X, cell_names1, c
 
 # check the ratio of accuracy
 def check_mnn_accuracy(mnn_adj, label1, label2):
+    mnn_adj = np.array(mnn_adj)
     con_same = np.zeros((mnn_adj.shape[0],2))
     for p in range(mnn_adj.shape[0]):
         c_p = mnn_adj[p,:].nonzero()[0]
