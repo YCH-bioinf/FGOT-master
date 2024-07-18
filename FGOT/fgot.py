@@ -112,6 +112,7 @@ def fgot_sparse_4dim(S:pd.DataFrame, D:pd.DataFrame, A : pd.DataFrame, M: np.nda
                 if fastMinibatch==False:
                     Snn1_batch = Snn1[cells1_id,:][:,anchors1_id]
                     Snn2_batch = Snn2[cells2_id,:][:,anchors2_id]
+                    P_anchor = np.where(P_anchor < 1e-4, 0, P_anchor)
                     for i in range(len(cells1_id)):
                         for j in range(len(cells2_id)):
                             M_batch.iloc[i,j] = M_batch.iloc[i,j] + lam * np.sum(np.multiply(compute_D_kl(Snn1_batch, Snn2_batch, i, j),P_anchor))

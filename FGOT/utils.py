@@ -222,7 +222,7 @@ def compute_D_kl(Snn1, Snn2, k, l)->np.ndarray:
     row_l = Snn2[l, :]
     row_k = row_k[:, np.newaxis]
     row_l = row_l[np.newaxis, :]
-    difference_square = (row_k - row_l) ** 2 # Numpy broadcasting
+    difference_square = (row_k - row_l) ** 2
     D_kl = 0.5 * difference_square
     
     return D_kl
