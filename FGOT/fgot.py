@@ -21,9 +21,9 @@ def fgot_tol(P_4dim):
 
 
 def fgot_sparse_4dim(S:pd.DataFrame, D:pd.DataFrame, A : pd.DataFrame, M: np.ndarray, \
-                     cell1_cluster=None, cell2_cluster=None, minibatch=0, batchsize=100, pair = False,\
-                     eps_p=1e-1, rho=1e1, nitermax=1e3, stopthr=1e-8, device='cpu',\
-                     adjust=True,fastMinibatch=True,lam:float=0.01,P_anchor:pd.DataFrame=None)->dict:
+                    cell1_cluster=None, cell2_cluster=None, minibatch=0, batchsize=100, pair = False,\
+                    eps_p=1e-1, rho=1e1, nitermax=1e3, stopthr=1e-8, device='cpu',\
+                    fastMinibatch=True, P_anchor:pd.DataFrame=None, lam:float=0.01,adjust=True)->dict:
     """ 
     Set batches for mini-batch computing.
     Set various parameters for feature-guided optimal transport problem.    
@@ -202,42 +202,6 @@ def sample_from_cluster(cell_cluster:pd.DataFrame,batchsize: int):
             begin_loc = end_loc
     return batches
 
-def sample_from_cluster_old(cell_cluster:pd.DataFrame,batchsize: int):
-    '''
-        Return the mini-batch samples according to cell_clusters.
-        cell_cluster:pd.DataFrame
-            cell_cluster['cluster']: numpy.ndarray
-    '''
-    unique_clusters = cell_cluster['cluster'].unique()
-    cluster_cell_index = {} # 
-    tmp_index = {}
-    for cluster in unique_clusters:
-        cluster_cell_index[cluster] = list(cell_cluster[cell_cluster['cluster'] == cluster].index)
-        np.random.shuffle(cluster_cell_index[cluster])
-        tmp_index[cluster] = 0
-    samples = []
-    flag = 1
-    while True:
-        cells_id = []
-        for cluster in unique_clusters:
-            if tmp_index[cluster] == -1:
-                flag = 0
-                break
-            N = cluster_cell_index[cluster][tmp_index[cluster]:]
-            n = int(len(cluster_cell_index[cluster])/len(cell_cluster) * batchsize)
-            if n <= len(N): 
-                cells_id += N[:n]
-                tmp_index[cluster] += n
-            else:
-                cells_id += N[:len(N)]
-                np.random.shuffle(cluster_cell_index[cluster])
-                cells_id += cluster_cell_index[cluster][:n-len(N)]
-                tmp_index[cluster] = -1
-        if flag == 0:
-            break
-        samples.append(cells_id)
-    return samples
-
 def adjust(X1_aligned:np.ndarray,X2_aligned:np.ndarray,paired=False,k=10):
     '''
     Adjust the X2_aligned to X1_aligned by translation and scaling.
@@ -360,7 +324,7 @@ def transfer_anchor(S:pd.DataFrame, D:pd.DataFrame, A : pd.DataFrame, M: np.ndar
     anchor_namesD,anchor_indnumsD = select_confident_cells(adataD,'cell_type')
     del adataD
     
-    print(f'Identified {len(anchor_indnumsS),len(anchor_indnumsD)} anchor cells!')
+    print(f'Identify {len(anchor_indnumsS),len(anchor_indnumsD)} anchor cells!')
     S_anchor_batch = S.iloc[anchor_indnumsS]
     D_anchor_batch = D.iloc[anchor_indnumsD]
     M_anchor_batch = M.iloc[anchor_indnumsS,anchor_indnumsD]
