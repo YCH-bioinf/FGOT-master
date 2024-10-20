@@ -9,6 +9,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from scipy.spatial.distance import pdist, squareform
 import scanpy as sc
 from anndata import AnnData
+import torch
+
 
 def jaccard_index(A,B):
     set_A, set_B = set(A),set(B)
@@ -56,57 +58,6 @@ def mnn(ds1, ds2, names1, names2, knn = 20, save_on_disk = True, approx = True):
     # Compute mutual nearest neighbors.
     mutual = match1 & set([ (b, a) for a, b in match2 ])
     return mutual
-
-def graph_alpha(spatial_locs, n_neighbors=20):
-    """
-    Construct a geometry-aware spatial proximity graph of the spatial spots of cells by using alpha complex.
-    """
-    A_knn = kneighbors_graph(spatial_locs, n_neighbors=n_neighbors, mode='distance')
-    estimated_graph_cut = A_knn.sum() / float(A_knn.count_nonzero())
-    spatial_locs_list = spatial_locs.tolist()
-    n_node = len(spatial_locs_list)
-    alpha_complex = gudhi.AlphaComplex(points=spatial_locs_list)
-    simplex_tree = alpha_complex.create_simplex_tree(max_alpha_square=estimated_graph_cut ** 2)
-    skeleton = simplex_tree.get_skeleton(1)
-    initial_graph = nx.Graph()
-    initial_graph.add_nodes_from([i for i in range(n_node)])
-    for s in skeleton:
-        if len(s[0]) == 2:
-            initial_graph.add_edge(s[0][0], s[0][1])
-    extended_graph = nx.Graph()
-    extended_graph.add_nodes_from(initial_graph)
-    extended_graph.add_edges_from(initial_graph.edges)
-    return nx.to_scipy_sparse_array(extended_graph, format='csr')
-
-def graph_high_gene_expression(extended_graph, gene_expression,ratio=0.75):
-    """
-    gene_expression: numpy.ndarray
-    extended_graph: csr scipy_sparse_array
-    """
-    if gene_expression.shape[0] != extended_graph.shape[0]:
-        print("the length of cell is not equal of the length of spatial locations!")
-    for i in range(extended_graph.shape[0]):
-        _, row_cols = extended_graph[[i]].nonzero()
-        similarities = cosine_similarity([gene_expression[i,]], gene_expression[row_cols,])[0]
-        sorted_indices = np.argsort(similarities)[::-1]
-        top_75_percent = int(ratio * len(similarities))
-        top_25_percent_indices = sorted_indices[top_75_percent:]
-        for j in top_25_percent_indices:
-            col = row_cols[j]
-            extended_graph[i,col] = 0
-    return extended_graph
-
-def graph_imagefeature(image_features, percentile=75):
-    """
-    Construct a graph using image features.
-    """
-    graph = nx.Graph()
-    distances = np.linalg.norm(image_features[:, np.newaxis] - image_features, axis=2)
-    threshold = np.percentile(distances, percentile)
-    indices = np.where(distances <= threshold)
-    edges = list(zip(indices[0], indices[1]))
-    graph.add_edges_from(edges)
-    return nx.to_scipy_sparse_array(graph, format='csr')
 
 def get_distance_matrix(spatial):
     spot_coordinates = spatial
@@ -185,44 +136,50 @@ def get_snn_mat(X:np.ndarray, scale = 1, n_neighbors = 50):
     snn[range(n), range(n)] = 1
     return snn
 
-def select_confident_cells(adata, label_name, q_cutoff = 0.75,focus_cell_type=None):
-    adata_sc = adata.copy()
-    sc.pp.scale(adata_sc)
-    # calculate leiden clustering
-    sc.pp.pca(adata_sc)
-    sc.pp.neighbors(adata_sc)
-    snn_mat = np.asmatrix(adata_sc.obsp['connectivities'].A)
-    
-    label_type = adata_sc.obs[label_name].tolist()
+def select_central_cells(S, label_name, q_cutoff = 0.75, focus_cell_type=None):
     if focus_cell_type is None:
-        focus_cell_type = list(set(label_type))
-    
-    min_cluster = 20
+        focus_cell_type = list(set(label_name))
     index_type_l = []
+    S = np.array(S)
     for i in range(len(focus_cell_type)):
-        indexes = [index for index in range(len(label_type)) if label_type[index] == focus_cell_type[i]]
-        if len(indexes) > min_cluster:
-            snn_i = snn_mat[np.ix_(indexes, indexes)]
-            col_si = snn_i.mean(1)
-            thresh_i = np.quantile(np.array(col_si)[:,0], q_cutoff)
-            index_i = np.where(col_si > thresh_i)[0]
-            if len(index_i) > min_cluster:
-                index_type_l.extend([indexes[index_i[j]] for j in range(len(index_i))])
-            else:
-                index_type_l.extend([indexes[j] for j in range(len(indexes))])
-        else:
-            index_type_l.extend([indexes[j] for j in range(len(indexes))])
-    anchor_indnums=list(set(index_type_l))
-    adata = adata[anchor_indnums,:]
-    anchor_names = list(adata.obs.index)
-    return anchor_names,anchor_indnums
+        indexes = [index for index in range(len(label_name)) if label_name[index] == focus_cell_type[i]]
+        wnn_i = S[np.ix_(indexes, indexes)]
+        col_si = wnn_i.mean(axis=0)
+        thresh_i = np.quantile(np.array(col_si), q_cutoff)
+        index_i = np.where(col_si > thresh_i)[0]
+        index_type_l.extend([indexes[j] for j in index_i])
+    anchor_indnums = list(set(index_type_l))
+    return anchor_indnums
 
-def compute_D_kl(Snn1, Snn2, k, l)->np.ndarray:
-    row_k = Snn1[k, :]
-    row_l = Snn2[l, :]
-    row_k = row_k[:, np.newaxis]
-    row_l = row_l[np.newaxis, :]
-    difference_square = (row_k - row_l) ** 2
-    D_kl = 0.5 * difference_square
-    
-    return D_kl
+
+def select_anchor_cells_unpaired(S, D, mnn_df, label_name1, label_name2, q_cutoff = 0.75, focus_cell_type=None, scale = 0):
+    snn1 = get_snn_mat(S, scale=scale)
+    snn2 = get_snn_mat(D, scale=scale)
+    index_central_cellsl = select_central_cells(snn1, label_name1, q_cutoff = q_cutoff, focus_cell_type=focus_cell_type)
+    index_central_cells2 = select_central_cells(snn2, label_name2, q_cutoff = q_cutoff, focus_cell_type=focus_cell_type)
+    mnn_pairs_indices = np.argwhere(mnn_df.values == 1)
+    anchor_indnumsS = []
+    anchor_indnumsD = []
+    for row, col in mnn_pairs_indices:
+        if row in index_central_cellsl or col in index_central_cells2:
+            anchor_indnumsS.append(row)
+            anchor_indnumsD.append(col)
+    anchor_indnumsS = list(set(anchor_indnumsS))
+    anchor_indnumsD = list(set(anchor_indnumsD))
+    return anchor_indnumsS, anchor_indnumsD
+
+
+def compute_cost_anchor(Snn1_batch, Snn2_batch, P_anchor, device='cuda'):
+    Snn1_batch = torch.tensor(Snn1_batch, device=device, dtype=torch.float32)
+    Snn2_batch = torch.tensor(Snn2_batch, device=device, dtype=torch.float32)
+    P_anchor = torch.tensor(P_anchor, device=device, dtype=torch.float32)
+
+    m = Snn1_batch.shape[0]
+    n = Snn2_batch.shape[0]
+    vector_m = torch.ones((m, 1), device=device, dtype=torch.float32)
+    vector_n = torch.ones((n, 1), device=device, dtype=torch.float32)
+    p = torch.sum(P_anchor, axis=1, keepdim=True)
+    q = torch.sum(P_anchor, axis=0, keepdim=True).T
+    C = (Snn1_batch ** 2) @ p @ vector_n.T + vector_m @ q.T @ (Snn2_batch ** 2).T - Snn1_batch @ P_anchor @ Snn2_batch.T
+
+    return C.cpu().numpy() if device != 'cpu' else C.numpy()

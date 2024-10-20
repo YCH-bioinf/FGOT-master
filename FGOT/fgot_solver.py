@@ -317,13 +317,12 @@ def OTSolver_sinkhorn_l1_sparse_torch_step(a, b, C, f,g,eps, rho_mu,rho_nu, nite
     tmp_K = sparse.coo_matrix((values, (indices[0], indices[1])), shape=tmp_K.shape)
     del indices,values
     
-    
-    
     return tmp_K,f_ret,g_ret,err_ret
+
 
 def fgot_flatten_solve(S:pd.DataFrame, D:pd.DataFrame, A:pd.DataFrame, M:pd.DataFrame,\
     eps_p=1e-1, rho_mu=1e1, rho_nu=1e1 , nitermax=1e3, stopthr=1e-8, device='cpu',\
-    adjust= True,c_sampleRate=1,r_sampleRate=1)->dict:
+    c_sampleRate=1,r_sampleRate=1)->dict:
     """ Solve the feature-guided optimal transport problem in sparse format.
     Translate the problem to 2D OT problem and solve it with FGOT solver.
     

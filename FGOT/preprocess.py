@@ -5,7 +5,7 @@ import networkx as nx
 import torch
 from tqdm import tqdm
 
-from .utils import jaccard_index,mnn,graph_alpha,graph_high_gene_expression,graph_imagefeature,get_snn_mat
+from .utils import jaccard_index,mnn,get_snn_mat
 
 def calculate_group_affinity(markers1,markers2):
     batch1_label2marker = {}
@@ -46,24 +46,6 @@ def calculate_cell_similarity_byMNN(X1, X2, cell_names1, cell_names2, scale=1, k
     mnn_mtx = adj.todense()[:n1,n1:]
     mnn_mtx = pd.DataFrame(mnn_mtx, index = cell_names1, columns=cell_names2)
     return mnn_mtx
-    
-def calculate_cell_similarity_bySpatial(spatial, X, cell_names1, cell_names2, n_neighbors=20, ratio=0.75):
-    graph = graph_alpha(spatial,n_neighbors=n_neighbors)
-    graph = graph_high_gene_expression(graph,X,ratio=ratio)
-    dense_matrix = graph.toarray()
-    if cell_names1 == cell_names2:
-        n = len(cell_names1)
-        dense_matrix[range(n), range(n)] = 1
-    return dense_matrix
-
-def calculate_cell_similarity_byImage(image_features:np.array, X, cell_names1, cell_names2, n_neighbors=20, ratio=0.75,percentile=25):
-    graph = graph_imagefeature(image_features,percentile=percentile)
-    graph = graph_high_gene_expression(graph,X,ratio=ratio)
-    dense_matrix = graph.toarray()
-    if cell_names1 == cell_names2:
-        n = len(cell_names1)
-        dense_matrix[range(n), range(n)] = 1
-    return dense_matrix
 
 # check the ratio of accuracy
 def check_mnn_accuracy(mnn_adj, label1, label2):
@@ -122,7 +104,7 @@ def smooth_cell_similarity_byLaplacian2(cell_Cor, snn1, snn2, eps = 1e-12):
     S_new = pd.DataFrame(S, index = cell_Cor.index, columns=cell_Cor.columns)
     return S_new
 
-def prior_feature_graph(promoters, gene_names, peak_names, scope = 250000):
+def prior_feature_graph(promoters, peak_names, gene_names, scope = 250000):
     filtered_promoters = []
     columns = ['id', 'chr', 'starts', 'ends', 'forward', 'backward', 'gene']
     for promoter in tqdm(promoters.itertuples()):
@@ -173,12 +155,12 @@ def prior_feature_graph(promoters, gene_names, peak_names, scope = 250000):
     print("The number of gene nodes, peak nodes, and edges in the prior feature graph is:",len(gene_nodes),len(peak_nodes),len(edges))
     hvg_indexs = {gene_names[i]:i for i in range(len(gene_names))}
     peak_indexs = {peak_names[i]:i for i in range(len(peak_names))}
-    adj = np.zeros((len(gene_names), len(peak_names)))
+    adj = np.zeros((len(peak_names), len(gene_names)))
     for edge in tqdm(edges):
         hvg_index = hvg_indexs[edge[0]]
         peak_index = peak_indexs[edge[1]]
-        adj[hvg_index, peak_index] = 1
-    adj = pd.DataFrame(adj, index=gene_names, columns=peak_names)
+        adj[peak_index, hvg_index] = 1
+    adj = pd.DataFrame(adj, index=peak_names, columns=gene_names)
     adj[adj == 0] = np.inf
     return adj
     
