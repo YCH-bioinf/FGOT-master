@@ -277,8 +277,8 @@ def fgot_analysis_link_intensity_for_each_celltype(P_tensor, feature_matrix, cel
     for f_i, f_j_list in tqdm(pairs.items()):
         int_i = np.zeros((len(clusters), len(f_j_list)))
         for i, cluster in enumerate(clusters):
-            index1 = [k for k, x in enumerate(cellrna_cluster) if x == cluster]  # Index for RNA
-            index2 = [k for k, x in enumerate(cellatac_cluster) if x == cluster]  # Index for ATAC
+            index1 = [k for k, x in enumerate(cellatac_cluster) if x == cluster]  # Index for ATAC
+            index2 = [k for k, x in enumerate(cellrna_cluster) if x == cluster]  # Index for RNA
             for j, f_j in enumerate(f_j_list):
                 key_j = (f_i, f_j) if mode == 'RNA2ATAC' else (f_j, f_i)
                 sparse_matrix = P_tensor[key_j].todense()
