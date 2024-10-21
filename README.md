@@ -24,7 +24,7 @@ All datasets used in this study are already published and were obtained from pub
 The details of all datasets used are available in the Methods section. The data used in our experiments have been uploaded and are freely available at https://drive.google.com/drive/folders/1H3GLroILCYSaGjowwJUjaO4JlKcNDdvy.
 
 ## Tutorial
-For the step-by-step tutorial, we would release it at https://github.com/YCH-bioinf/FGOT-master/tree/main/examples.
+For the step-by-step tutorials, we have released them at https://github.com/YCH-bioinf/FGOT-master/tree/main/examples.
 
 
 
