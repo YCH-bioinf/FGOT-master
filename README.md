@@ -23,7 +23,7 @@ cd FGOT-master
 Then package the required packages and install them locally.
 ```
 pip install pybind11
-python3 setup.py sdist bdist_wheel
+python setup.py sdist bdist_wheel
 python setup.py install
 pip3 install dist/FGOT-0.0.8-py3-none-any.whl  --force-reinstall
 ```
@@ -44,6 +44,4 @@ For the step-by-step tutorials, we have released them at https://github.com/YCH-
 
 ## Support
 If you have any questions, please feel free to contact us zhanglh@whu.edu.cn.
-
-## Citation
 
