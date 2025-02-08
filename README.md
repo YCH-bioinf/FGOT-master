@@ -4,8 +4,13 @@
 
 Integrating single-cell or spatial transcriptomic and epigenomic data enables scrutinizing the transcriptional regulatory mechanisms controlling cell fate.  In current methods, multi-omics measurements are projected into a shared latent space, without connecting transcriptomic and epigenomic features, such as target genes and their regulatory elements, and in addition, the cell-type specific regulatory mechanism are often missing. To address both problems, we develop a Feature Guided Optimal Transport (FGOT) method, which allows incorporation prior knowledge of genes and their regulatory elements relationship, to simultaneously uncover cellular heterogeneity and their associated transcriptional regulatory links. Benchmarking on simulation data and validating via histone modification data or 3D genomics data for matched real data show good robustness and accuracy in integration and inference of regulatory links. From both paired and unpaired multi-omics data, it is found that for the same gene different type of cells have different regulatory relationship. Application of FGOT to paired spatial multi-omics data show spatial differences in regulatory links for the same gene. The method allows systematic screening of more specific regulatory elements in diseases at single-cell level.
 
-## Requirements
+## Installation
+The FGOT package is developed based on the Python libraries Scanpy, PyTorch and PyG (PyTorch Geometric) framework.
 
+First clone the repository.
+
+
+## Requirements
 * anndata==0.10.8
 * gudhi==3.9.0
 * hnswlib==0.8.0
@@ -27,7 +32,8 @@ The details of all datasets used are available in the Methods section. The data 
 For the step-by-step tutorials, we have released them at https://github.com/YCH-bioinf/FGOT-master/tree/main/examples.
 
 
-
+## Support
+If you have any questions, please feel free to contact us zhanglh@whu.edu.cn.
 
 ## Citation
 
