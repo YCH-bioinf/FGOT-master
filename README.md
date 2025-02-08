@@ -20,7 +20,7 @@ The first way is to install it locally. First clone the repository.
 git clone https://github.com/YCH-bioinf/FGOT-master.git
 cd FGOT-master
 ```
-We package the required packages and install them locally.
+Then package the required packages and install them locally.
 ```
 pip install pybind11
 python3 setup.py sdist bdist_wheel
