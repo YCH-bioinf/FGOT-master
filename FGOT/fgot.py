@@ -252,7 +252,7 @@ def align(X, Y, P, mode = "ATAC2RNA"):
         Y1 = np.array(Y)
         weights = np.sum(P.T, axis = 0)
         X1 = np.matmul(P, np.array(Y))/ weights[:, None]
-     # Projecting the Y domain onto the X domain
+    # Projecting the Y domain onto the X domain
     elif mode == "RNA2ATAC":
         X1 = np.array(X)
         weights = np.sum(P, axis = 0)
