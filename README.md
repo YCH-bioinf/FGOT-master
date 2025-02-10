@@ -25,7 +25,7 @@ Then package the required packages and install them locally.
 pip install pybind11
 python setup.py sdist bdist_wheel
 python setup.py install
-pip3 install dist/FGOT-0.0.8-py3-none-any.whl  --force-reinstall
+pip3 install dist/FGOT-0.0.9-py3-none-any.whl  --force-reinstall
 ```
 The second installed way is by `pip`.
 ```
