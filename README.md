@@ -1,4 +1,5 @@
 # FGOT-master
+[![PyPI](https://img.shields.io/pypi/v/scanpy?logo=PyPI)](https://pypi.org/project/FGOT/)
 
 ## Overview
 
