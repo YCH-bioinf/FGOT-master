@@ -292,33 +292,3 @@ def fgot_analysis_link_intensity_for_each_celltype(P_tensor, feature_matrix, cel
     # Combine all intensity DataFrames into one
     intensity_df = pd.concat(intensity_s, axis=0)
     return intensity_df
-
-
-def refine(sample_id, pred, distance_mat, shape="hexagon"):
-    '''
-        Refine in single modality
-        Thanks to https://github.com/jianhuupenn/SpaGCN/blob/master/SpaGCN_package/SpaGCN/util.py
-        This function is inspired by SpaGCN.util.refine(sample_id,pred,dis,shape)
-        For paired data with spatial information only.
-    '''
-    refined_pred=[]
-    pred=pd.DataFrame({"pred": pred}, index=sample_id)
-    distance_df=pd.DataFrame(distance_mat, index=sample_id, columns=sample_id) # 一个矩阵，每个元素是两个点之间的距离
-    if shape=="hexagon":
-        num_nbs=6
-    elif shape=="square":
-        num_nbs=4
-    else:
-        print("Shape not recongized, shape='hexagon' for Visium data, 'square' for ST data.")
-    for i in range(len(sample_id)):
-        index=sample_id[i]
-        dis_tmp=distance_df.loc[index, :].sort_values()
-        nbs=dis_tmp[0:num_nbs+1]  #choose the nearest neighbor points
-        nbs_pred=pred.loc[nbs.index, "pred"]
-        self_pred=pred.loc[index, "pred"]
-        value_count=nbs_pred.value_counts()
-        if (value_count.loc[self_pred]<num_nbs/2) and (np.max(value_count)>num_nbs/2):
-            refined_pred.append(value_count.idxmax())
-        else:           
-            refined_pred.append(self_pred)
-    return refined_pred
