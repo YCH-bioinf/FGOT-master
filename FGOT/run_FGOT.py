@@ -18,8 +18,8 @@ def parse_args():
     parser.add_argument("--atac_data", type=str, required=True, help="Path to the normalized ATAC data file")
     parser.add_argument("--cluster_info", type=str, required=True, help="Path to the RNA cluster info file")
     parser.add_argument("--atac_cluster_info", type=str, default=None, help="Path to the ATAC cluster info file (optional, required if unpaired)")
-    parser.add_argument("--feature_matrix_folder", type=str, required=True, help="Path to the folder containing peak-gene_mt files")
-    parser.add_argument("--corr_matrix", type=str, required=True, help="Path to the corr matrix file (snn or wnn matrix)")
+    parser.add_argument("--feature_matrix", type=str, required=True, help="Path to the peak-gene matrix file (where a value of 1 indicates that peaks are located close to the gene)")
+    parser.add_argument("--corr_matrix", type=str, required=True, help="Path to the cell corr matrix file (snn or wnn matrix)")
     parser.add_argument("--output_prefix", type=str, required=True, help="Prefix for output files")
     parser.add_argument("--device", type=str, default="cuda:0", help="Device to use (e.g., cuda:0 or cpu)")
     parser.add_argument("--minibatch", type=int, default=0, help="Whether to use minibatch (default 0 for not use)")
@@ -70,19 +70,7 @@ def main():
     # build a priori feature graph
     print(f"Building the priori feature graph for FGOT...")
     # for simulation multi-omics data
-    import os
-    peak_gene_mts = []
-    for file in os.listdir(args.feature_matrix_folder):
-        if file.endswith(".txt"):
-            peak_gene_mt = pd.read_csv(os.path.join(args.feature_matrix_folder, file), sep="\t", index_col=0)
-            peak_gene_mts.append((peak_gene_mt != 0).astype(int))
-    feature_matrix = sum(peak_gene_mts)
-    feature_matrix[feature_matrix > 0] = 1
-    np.random.seed(42)
-    for col in feature_matrix.columns:
-        n = np.random.randint(5, 8) # Add random 5-7 peak connections per gene
-        selected_peaks = np.random.choice(feature_matrix.index, size=n, replace=False)
-        feature_matrix.loc[selected_peaks, col] = 1
+    feature_matrix = pd.read_csv(args.feature_matrix, sep='\t', index_col=0)
     feature_matrix = feature_matrix.replace(0, np.inf)
     # for true multi-omics data which we have gene annotations（4 columns: chr, starts, ends, genes）
     # promoters = pd.read_csv('hg38.promoter.regions.txt', sep = '\t') # hg19/mm10
@@ -154,11 +142,11 @@ if __name__ == "__main__":
     main()
 
 
-## shell command
+# shell command
 # python3 /home/nas2/biod/yangchenghui/FGOT-master/FGOT/run_FGOT.py -i paired \
 # --rna_data /home/nas2/biod/yangchenghui/FGOT_scMultiSim_simulation/simulation_data_discrete_4types/normalized_rna_data.txt \
 # --atac_data /home/nas2/biod/yangchenghui/FGOT_scMultiSim_simulation/simulation_data_discrete_4types/normalized_atac_data.txt \
 # --cluster_info /home/nas2/biod/yangchenghui/FGOT_scMultiSim_simulation/simulation_data_discrete_4types/celltype_info.txt \
-# --feature_matrix_folder /home/nas2/biod/yangchenghui/FGOT_scMultiSim_simulation/simulation_data_discrete_4types/peak_gene_mt \
+# --feature_matrix /home/nas2/biod/yangchenghui/FGOT_scMultiSim_simulation/simulation_data_discrete_4types/feature_matrix.txt \
 # --corr_matrix /home/nas2/biod/yangchenghui/FGOT_scMultiSim_simulation/simulation_data_discrete_4types/simu_wnn.txt \
 # --output_prefix /home/nas2/biod/yangchenghui/FGOT_scMultiSim_simulation/FGOT_output_test/
