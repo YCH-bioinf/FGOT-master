@@ -1,4 +1,5 @@
 # FGOT-master
+[![DOI](https://zenodo.org/badge/829385375.svg)](https://doi.org/10.5281/zenodo.16978922)
 [![PyPI](https://img.shields.io/pypi/v/scanpy?logo=PyPI)](https://pypi.org/project/FGOT/)
 
 ## Overview
